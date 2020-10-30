@@ -124,3 +124,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 bads.txt
+NordVPNChecker.zip
+NordVPNChecker/combos.txt
+NordVPNChecker/NordVPNChecker.exe
+NordVPNChecker/proxies.txt
