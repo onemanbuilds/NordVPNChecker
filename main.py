@@ -16,9 +16,12 @@ class Main:
             system('cls')
         else:
             print("\n") * 120
-
+            
     def SetTitle(self,title_name:str):
-        system("title {0}".format(title_name))
+        if name in ('ce', 'nt', 'dos'):
+            system("title {0}".format(title_name))
+        else:
+            stdout.write("\x1b]2;{0}\x07".format(title_name))
 
     def PrintText(self,bracket_color:Fore,text_in_bracket_color:Fore,text_in_bracket,text):
         self.lock.acquire()
@@ -54,7 +57,10 @@ class Main:
 
     def TitleUpdate(self):
         while True:
-            self.SetTitle('One Man Builds NordVPN Checker Tool ^| HITS: {0} ^| BADS: {1} ^| RETRIES: {2} ^| THREADS: {3}'.format(self.hits,self.bads,self.retries,active_count()-1))
+            try:
+                self.SetTitle('One Man Builds NordVPN Checker Tool | HITS: {0} | BADS: {1} | RETRIES: {2} | THREADS: {3}'.format(self.hits,self.bads,self.retries,active_count()-1))
+            except:
+                self.SetTitle('One Man Builds NordVPN Checker Tool ^| HITS: {0} ^| BADS: {1} ^| RETRIES: {2} ^| THREADS: {3}'.format(self.hits,self.bads,self.retries,active_count()-1))
             sleep(0.1)
 
     def __init__(self):
