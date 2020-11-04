@@ -1,5 +1,11 @@
 # NordVPNChecker
  Check multiple accounts validity on NordVPN. 
+
+# Installation
+```
+pip3 install -r requirements.txt
+``` 
+
 # Tool
 ![](https://i.ibb.co/m6YQrYn/example.png)
 
