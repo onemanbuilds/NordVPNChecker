@@ -3,7 +3,6 @@ from os import name,system
 from sys import stdout
 from random import choice
 from threading import Thread,Lock,active_count
-from fake_useragent import UserAgent
 from time import sleep
 from bs4 import BeautifulSoup
 import requests
@@ -28,9 +27,13 @@ class Main:
         self.lock.release()
 
     def ReadFile(self,filename,method):
-        with open(filename,method) as f:
+        with open(filename,method,encoding='utf8') as f:
             content = [line.strip('\n') for line in f]
             return content
+
+    def GetRandomUserAgent(self):
+        useragents = self.ReadFile('useragents.txt','r')
+        return choice(useragents)
 
     def GetRandomProxy(self):
         proxies_file = self.ReadFile('proxies.txt','r')
@@ -62,12 +65,11 @@ class Main:
         self.clear()
         self.SetTitle('One Man Builds NordVPN Checker Tool')
         self.title = Style.BRIGHT+Fore.RED+"""                                        
-                 _   _               _ _   _______ _   _   _____  _   _  _____ _____  _   __ ___________ 
-                | \ | |             | | | | | ___ \ \ | | /  __ \| | | ||  ___/  __ \| | / /|  ___| ___ \\
-                |  \| | ___  _ __ __| | | | | |_/ /  \| | | /  \/| |_| || |__ | /  \/| |/ / | |__ | |_/ /
-                | . ` |/ _ \| '__/ _` | | | |  __/| . ` | | |    |  _  ||  __|| |    |    \ |  __||    / 
-                | |\  | (_) | | | (_| \ \_/ / |   | |\  | | \__/\| | | || |___| \__/\| |\  \| |___| |\ \ 
-                \_| \_/\___/|_|  \__,_|\___/\_|   \_| \_/  \____/\_| |_/\____/ \____/\_| \_/\____/\_| \_|
+                                  ╔═════════════════════════════════════════════════╗    
+                                     ╔╗╔╔═╗╦═╗╔╦╗╦  ╦╔═╗╔╗╔  ╔═╗╦ ╦╔═╗╔═╗╦╔═╔═╗╦═╗
+                                     ║║║║ ║╠╦╝ ║║╚╗╔╝╠═╝║║║  ║  ╠═╣║╣ ║  ╠╩╗║╣ ╠╦╝
+                                     ╝╚╝╚═╝╩╚══╩╝ ╚╝ ╩  ╝╚╝  ╚═╝╩ ╩╚═╝╚═╝╩ ╩╚═╝╩╚═
+                                  ╚═════════════════════════════════════════════════╝
 
                 
         """
@@ -75,7 +77,6 @@ class Main:
         self.hits = 0
         self.bads = 0
         self.retries = 0
-        self.ua = UserAgent()
         self.lock = Lock()
         self.use_proxy = int(input(Style.BRIGHT+Fore.CYAN+'['+Fore.RED+'>'+Fore.CYAN+'] ['+Fore.RED+'1'+Fore.CYAN+']Proxy ['+Fore.RED+'0'+Fore.CYAN+']Proxyless: '))
         
@@ -107,7 +108,7 @@ class Main:
             json_payload['password'] = password
 
             headers = {
-                'User-Agent':self.ua.random,
+                'User-Agent':self.GetRandomUserAgent(),
                 'Content-Type':'application/json',
                 'Accept':'*/*',
                 'Accept-Encoding':'gzip, deflate, br',
