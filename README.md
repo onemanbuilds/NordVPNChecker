@@ -10,7 +10,7 @@
  - Detailed hits.
 
 # Preview
-![](https://i.ibb.co/w0HCJ8c/Combo-AIO-Cz5-ZIz-G8-HF.png)
+![](https://i.ibb.co/wB8wRJf/Nord-VPN-w-JDDXVUsba2.png)
 
 # Installation
  - First method, make sure you have python 3.8.7 or higher.<br/>
