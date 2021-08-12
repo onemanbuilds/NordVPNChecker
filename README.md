@@ -1,20 +1,33 @@
 # NordVPNChecker
  Check multiple accounts validity on NordVPN. 
 
+# Features
+ - Title update.</br>
+ - Multithreading.</br>
+ - Proxy rotation.</br>
+ - Useragent rotation.</br>
+ - Expire check.</br>
+ - Detailed hits.
+
+# Preview
+![](https://i.ibb.co/w0HCJ8c/Combo-AIO-Cz5-ZIz-G8-HF.png)
+
 # Installation
-```
-pip3 install -r requirements.txt
-``` 
+ - First method, make sure you have python 3.8.7 or higher.<br/>
+ ```
+ pip3 install -r requirements.txt then run the command python main.py
+ ```
+ - Second method, run 
+ ```
+ requirements_install.bat
+ ```
+ ```
+ run_script.bat
+ ```
+ - Third method, download the exe version from the releases tab on the right side.
 
-# Config
- use_proxy (0 - Proxyless | 1 - Proxy).<br/>
- proxy_type (1 - HTTPS | 2 - SOCKS4 | 3 - SOCKS5).<br/>
- threads (Higher means faster performance, but more chance for inaccurate results).<br/>
- webhook_enable (0 - Disable webhook support | 1 - Enable webhook support).<br/>
- webhook_url (You have to enter your webhook url here).
-
-# Tool
-![](https://i.ibb.co/m6YQrYn/example.png)
+# Note
+ - If you have any issues or noticed something feel free to report the issue so i can fix it when i will have time.<br/>
 
 # Legal
  The software designed to perform website security testing.<br/>
